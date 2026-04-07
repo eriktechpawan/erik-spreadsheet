@@ -411,6 +411,17 @@ QJsonObject SessionState::toJson() const
         root[QStringLiteral("lookupConfigs")] = arr;
     }
 
+    // Formula configs
+    {
+        QJsonArray arr;
+        for (const auto& fc : formulaConfigs) arr.append(fc.toJson());
+        root[QStringLiteral("formulaConfigs")] = arr;
+    }
+
+    // Tabs
+    root[QStringLiteral("tabStates")] = tabStates;
+    root[QStringLiteral("activeTabIndex")] = activeTabIndex;
+
     // Window geometry (Base64-encoded)
     root[QStringLiteral("windowGeometry")] =
         QString::fromLatin1(windowGeometry.toBase64());
@@ -497,6 +508,18 @@ SessionState SessionState::fromJson(const QJsonObject& root)
             s.lookupConfigs.push_back(lookupConfigFromJson(v.toObject()));
         }
     }
+
+    // Formula configs
+    {
+        const QJsonArray arr = root[QStringLiteral("formulaConfigs")].toArray();
+        for (const auto& v : arr) {
+            s.formulaConfigs.push_back(FormulaConfig::fromJson(v.toObject()));
+        }
+    }
+
+    // Tabs
+    s.tabStates = root[QStringLiteral("tabStates")].toArray();
+    s.activeTabIndex = root[QStringLiteral("activeTabIndex")].toInt(0);
 
     // Window geometry
     s.windowGeometry = QByteArray::fromBase64(

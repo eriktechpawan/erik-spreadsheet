@@ -56,6 +56,11 @@ set(MAIN_SOURCE
     src/main.cpp
 )
 
+# src/app/
+set(APP_SOURCES
+    src/app/tab_manager.cpp
+)
+
 # src/ui/
 set(UI_SOURCES
     src/ui/main_window.cpp
@@ -75,6 +80,8 @@ set(UI_DIALOG_SOURCES
     src/ui/dialogs/column_manager_dialog.cpp
     src/ui/dialogs/preferences_dialog.cpp
     src/ui/dialogs/recent_files_dialog.cpp
+    src/ui/dialogs/calculated_column_dialog.cpp
+    src/ui/dialogs/query_lineage_dialog.cpp
 )
 
 # src/ui/widgets/
@@ -85,6 +92,7 @@ set(UI_WIDGET_SOURCES
     src/ui/widgets/active_filter_chip_bar.cpp
     src/ui/widgets/column_profile_panel.cpp
     src/ui/widgets/progress_overlay.cpp
+    src/ui/widgets/result_tab_widget.cpp
 )
 
 # src/data/duckdb/
@@ -107,6 +115,24 @@ set(DATA_MODEL_SOURCES
     src/data/model/sort_state.cpp
     src/data/model/edit_delta_store.cpp
     src/data/model/session_state.cpp
+    src/data/model/dataset_descriptor.cpp
+    src/data/model/tab_state.cpp
+    src/data/model/transformation_step.cpp
+    src/data/model/transformation_pipeline.cpp
+)
+
+# src/data/types/
+set(DATA_TYPES_SOURCES
+    src/data/types/pivot_config.cpp
+    src/data/types/lookup_config.cpp
+    src/data/types/formula_config.cpp
+)
+
+# src/data/formula/
+set(DATA_FORMULA_SOURCES
+    src/data/formula/formula_parser.cpp
+    src/data/formula/formula_engine.cpp
+    src/data/formula/formula_sql_translator.cpp
 )
 
 # src/workers/
@@ -130,11 +156,14 @@ set(UTILS_SOURCES
 
 # Aggregate all library sources (everything except main.cpp)
 set(LIB_SOURCES
+    ${APP_SOURCES}
     ${UI_SOURCES}
     ${UI_DIALOG_SOURCES}
     ${UI_WIDGET_SOURCES}
     ${DATA_DUCKDB_SOURCES}
     ${DATA_MODEL_SOURCES}
+    ${DATA_TYPES_SOURCES}
+    ${DATA_FORMULA_SOURCES}
     ${WORKER_SOURCES}
     ${UTILS_SOURCES}
 )
@@ -211,6 +240,11 @@ set(UNIT_TEST_SOURCES
     tests/unit/test_sort_state.cpp
     tests/unit/test_row_window_cache.cpp
     tests/unit/test_edit_delta_store.cpp
+    tests/unit/formula/test_formula_parser.cpp
+    tests/unit/formula/test_formula_sql_translator.cpp
+    tests/unit/pivot/test_pivot_config.cpp
+    tests/unit/lookup/test_lookup_config.cpp
+    tests/unit/pipeline/test_transformation_pipeline.cpp
 )
 
 foreach(test_source IN LISTS UNIT_TEST_SOURCES)

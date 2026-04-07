@@ -1,9 +1,12 @@
 #include "main_window.h"
 
+#include "app/tab_manager.h"
+
 #include "ui/menu_manager.h"
 #include "ui/status_bar_manager.h"
 #include "ui/toolbar_manager.h"
 
+#include "ui/dialogs/calculated_column_dialog.h"
 #include "ui/dialogs/column_manager_dialog.h"
 #include "ui/dialogs/column_stats_dialog.h"
 #include "ui/dialogs/export_dialog.h"
@@ -12,6 +15,7 @@
 #include "ui/dialogs/lookup_wizard_dialog.h"
 #include "ui/dialogs/pivot_table_dialog.h"
 #include "ui/dialogs/preferences_dialog.h"
+#include "ui/dialogs/query_lineage_dialog.h"
 #include "ui/dialogs/recent_files_dialog.h"
 
 #include "ui/widgets/active_filter_chip_bar.h"
@@ -19,6 +23,7 @@
 #include "ui/widgets/data_table_view.h"
 #include "ui/widgets/filter_panel.h"
 #include "ui/widgets/progress_overlay.h"
+#include "ui/widgets/result_tab_widget.h"
 #include "ui/widgets/search_bar.h"
 
 #include "data/duckdb/csv_import_service.h"
@@ -28,11 +33,18 @@
 #include "data/duckdb/pivot_service.h"
 #include "data/duckdb/stats_service.h"
 
+#include "data/formula/formula_engine.h"
+#include "data/formula/formula_sql_translator.h"
+
+#include "data/model/dataset_descriptor.h"
 #include "data/model/edit_delta_store.h"
 #include "data/model/filter_state.h"
 #include "data/model/session_state.h"
 #include "data/model/sort_state.h"
+#include "data/model/tab_state.h"
 #include "data/model/table_model.h"
+#include "data/model/transformation_pipeline.h"
+#include "data/model/transformation_step.h"
 
 #include "data/types/column_schema.h"
 
@@ -52,11 +64,14 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QSettings>
 #include <QToolBar>
 #include <QVBoxLayout>
+
+#include <chrono>
 
 namespace csvforge {
 
@@ -99,6 +114,7 @@ void MainWindow::setupEngine()
     m_importService = std::make_unique<CSVImportService>(m_engine.get());
 
     m_taskDispatcher = std::make_unique<TaskDispatcher>();
+    m_tabManager     = std::make_unique<TabManager>(m_engine.get());
     m_filterState    = new FilterState(this);
     m_sortState      = new SortState(this);
 }
@@ -122,6 +138,11 @@ void MainWindow::setupCentralWidget()
     auto* centralLayout = new QVBoxLayout(centralWidget);
     centralLayout->setContentsMargins(0, 0, 0, 0);
     centralLayout->setSpacing(0);
+
+    // Tab widget for multiple datasets
+    m_tabWidget = new ResultTabWidget(centralWidget);
+    m_tabWidget->setTabManager(m_tabManager.get());
+    centralLayout->addWidget(m_tabWidget);
 
     // Search bar (hidden by default)
     m_searchBar = new SearchBar(centralWidget);
@@ -334,6 +355,22 @@ void MainWindow::setupConnections()
     // ---- Progress overlay cancel ----
     connect(m_progressOverlay, &ProgressOverlay::cancelled,
             this, [this]() { m_taskDispatcher->cancelAll(); });
+
+    // ---- Tab widget ----
+    connect(m_tabWidget, &ResultTabWidget::closeRequested,
+            this, &MainWindow::onTabCloseRequested);
+    connect(m_tabWidget, &ResultTabWidget::renameRequested,
+            this, &MainWindow::onTabRenameRequested);
+    connect(m_tabWidget, &ResultTabWidget::duplicateRequested,
+            this, &MainWindow::onTabDuplicateRequested);
+    connect(m_tabWidget, &ResultTabWidget::exportRequested,
+            this, &MainWindow::onTabExportRequested);
+    connect(m_tabWidget, &ResultTabWidget::showLineageRequested,
+            this, &MainWindow::onTabLineageRequested);
+
+    // ---- Tab manager ----
+    connect(m_tabManager.get(), &TabManager::activeTabChanged,
+            this, &MainWindow::onTabChanged);
 }
 
 void MainWindow::setupDragDrop()
@@ -1210,6 +1247,158 @@ void MainWindow::closeEvent(QCloseEvent* event)
     }
     saveSettings();
     event->accept();
+}
+
+// ===========================================================================
+// Tab operations
+// ===========================================================================
+
+void MainWindow::onTabChanged(int index)
+{
+    switchToTab(index);
+}
+
+void MainWindow::onTabCloseRequested(int index)
+{
+    if (!m_tabManager) return;
+
+    const auto* tab = m_tabManager->tabAt(index);
+    if (tab && tab->isDirty()) {
+        auto result = QMessageBox::question(
+            this, tr("Close Tab"),
+            tr("Tab '%1' has unsaved changes. Close anyway?")
+                .arg(tab->descriptor().displayName),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (result != QMessageBox::Yes) return;
+    }
+    m_tabManager->closeTab(index);
+}
+
+void MainWindow::onTabRenameRequested(int index)
+{
+    if (!m_tabManager) return;
+    const auto* tab = m_tabManager->tabAt(index);
+    if (!tab) return;
+
+    bool ok = false;
+    QString newName = QInputDialog::getText(
+        this, tr("Rename Tab"), tr("New name:"),
+        QLineEdit::Normal, tab->descriptor().displayName, &ok);
+    if (ok && !newName.trimmed().isEmpty()) {
+        m_tabManager->renameTab(index, newName.trimmed());
+    }
+}
+
+void MainWindow::onTabDuplicateRequested(int index)
+{
+    if (m_tabManager) m_tabManager->duplicateTab(index);
+}
+
+void MainWindow::onTabExportRequested(int index)
+{
+    if (!m_tabManager) return;
+    const auto* tab = m_tabManager->tabAt(index);
+    if (!tab) return;
+
+    // Delegate to export dialog with the tab's table
+    ExportDialog dlg(tab->schema(), this);
+    if (dlg.exec() == QDialog::Accepted) {
+        auto opts = dlg.getOptions();
+        opts.tableName = tab->descriptor().tableName;
+        m_exportService->exportTable(opts);
+    }
+}
+
+void MainWindow::onTabLineageRequested(int index)
+{
+    if (!m_tabManager) return;
+    const auto* tab = m_tabManager->tabAt(index);
+    if (!tab) return;
+
+    TransformationPipeline pipeline =
+        TransformationPipeline::fromJson(tab->pipelineJson());
+
+    QueryLineageDialog dlg(tab, pipeline, this);
+    dlg.exec();
+}
+
+void MainWindow::switchToTab(int index)
+{
+    if (!m_tabManager) return;
+    auto* tab = m_tabManager->tabAt(index);
+    if (!tab) return;
+
+    // Update the table model to show this tab's data
+    m_currentTableName = tab->descriptor().tableName;
+    updateWindowTitle();
+    updateStatusBar();
+}
+
+// ===========================================================================
+// Calculated column / query lineage
+// ===========================================================================
+
+void MainWindow::onShowCalculatedColumn()
+{
+    if (m_currentTableName.isEmpty()) return;
+
+    auto schema = m_engine->getTableSchema(m_currentTableName);
+    CalculatedColumnDialog dlg(schema, m_engine.get(), m_currentTableName, this);
+
+    if (dlg.exec() == QDialog::Accepted) {
+        auto def = dlg.getDefinition();
+        if (!def.isValid()) return;
+
+        // Translate formula to SQL
+        FormulaSQLTranslator translator;
+        const QString sqlExpr = translator.translateFormula(def.formulaText);
+        if (sqlExpr.isEmpty()) {
+            QMessageBox::warning(this, tr("Formula Error"),
+                                 tr("Could not translate formula to SQL."));
+            return;
+        }
+
+        // Create a new derived table with the calculated column
+        const QString resultTable = QStringLiteral("calc_%1").arg(
+            QString::number(
+                std::chrono::steady_clock::now().time_since_epoch().count()));
+
+        const QString sql = QStringLiteral(
+            "CREATE TABLE %1 AS SELECT *, %2 AS %3 FROM %4")
+            .arg(quoteName(resultTable), sqlExpr,
+                 quoteName(def.columnName), quoteName(m_currentTableName));
+
+        auto qr = m_engine->executeQuery(sql);
+        if (!qr.success) {
+            QMessageBox::warning(this, tr("Calculation Error"), qr.error);
+            return;
+        }
+
+        // Create a new tab for the result
+        DatasetDescriptor desc;
+        desc.type = DatasetType::Calculated;
+        desc.tableName = resultTable;
+        desc.displayName = def.columnName;
+        desc.parentDatasetId = m_tabManager->activeTab()
+            ? m_tabManager->activeTab()->descriptor().id : QString();
+        desc.rowCount = m_engine->getRowCount(resultTable);
+        auto newSchema = m_engine->getTableSchema(resultTable);
+        desc.columnCount = static_cast<int>(newSchema.size());
+
+        m_tabManager->createDerivedTab(desc);
+    }
+}
+
+void MainWindow::onShowQueryLineage()
+{
+    if (!m_tabManager || !m_tabManager->activeTab()) return;
+
+    const auto* tab = m_tabManager->activeTab();
+    TransformationPipeline pipeline =
+        TransformationPipeline::fromJson(tab->pipelineJson());
+
+    QueryLineageDialog dlg(tab, pipeline, this);
+    dlg.exec();
 }
 
 } // namespace csvforge

@@ -20,6 +20,7 @@ class SearchBar;
 class ActiveFilterChipBar;
 class ColumnProfilePanel;
 class ProgressOverlay;
+class ResultTabWidget;
 class ToolbarManager;
 class MenuManager;
 class StatusBarManager;
@@ -28,6 +29,7 @@ class ExportService;
 class PivotService;
 class LookupService;
 class CSVImportService;
+class TabManager;
 struct CSVImportOptions;
 struct ColumnStats;
 struct SessionState;
@@ -84,6 +86,8 @@ private slots:
     void onRequestColumnStats(const QString& columnName);
     void onShowPivotTable();
     void onShowLookupWizard();
+    void onShowCalculatedColumn();
+    void onShowQueryLineage();
     void onRefreshData();
 
     // Sort
@@ -120,6 +124,14 @@ private slots:
     void onDirtyStateChanged(bool dirty);
     void onSelectionChanged(int rowCount);
 
+    // Tab operations
+    void onTabChanged(int index);
+    void onTabCloseRequested(int index);
+    void onTabRenameRequested(int index);
+    void onTabDuplicateRequested(int index);
+    void onTabExportRequested(int index);
+    void onTabLineageRequested(int index);
+
     // Preferences
     void onShowPreferences();
     void onShowAbout();
@@ -136,6 +148,9 @@ private:
     std::unique_ptr<LookupService> m_lookupService;
     std::unique_ptr<CSVImportService> m_importService;
 
+    // Tab management
+    std::unique_ptr<TabManager> m_tabManager;
+
     // Data model
     TableModel* m_tableModel = nullptr;
     FilterState* m_filterState = nullptr;
@@ -147,6 +162,7 @@ private:
     StatusBarManager* m_statusBarManager = nullptr;
 
     // UI widgets
+    ResultTabWidget* m_tabWidget = nullptr;
     DataTableView* m_tableView = nullptr;
     FilterPanel* m_filterPanel = nullptr;
     SearchBar* m_searchBar = nullptr;
@@ -185,6 +201,7 @@ private:
     void loadSessionState(const QString& path);
     bool confirmUnsavedChanges();
     void fetchPageForRow(qint64 row);
+    void switchToTab(int index);
 
     // Settings persistence
     void loadSettings();

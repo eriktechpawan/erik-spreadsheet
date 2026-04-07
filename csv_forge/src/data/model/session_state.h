@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QByteArray>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QMap>
 #include <QString>
@@ -10,6 +11,7 @@
 
 #include "data/model/sort_state.h"
 #include "data/types/filter_rule.h"
+#include "data/types/formula_config.h"
 #include "data/types/lookup_config.h"
 #include "data/types/pivot_config.h"
 
@@ -39,6 +41,13 @@ struct SessionState {
 
     // Lookup configs
     std::vector<LookupConfig> lookupConfigs;
+
+    // Formula / calculated column configs
+    std::vector<FormulaConfig> formulaConfigs;
+
+    // Tabs (serialized tab state array)
+    QJsonArray tabStates;
+    int activeTabIndex = 0;
 
     // Window geometry
     QByteArray windowGeometry;
