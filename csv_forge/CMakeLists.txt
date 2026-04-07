@@ -120,6 +120,11 @@ set(UTILS_SOURCES
     src/utils/FileUtils.cpp
     src/utils/StringUtils.cpp
     src/utils/CsvParser.cpp
+    src/utils/logging.cpp
+    src/utils/perf_timer.cpp
+    src/utils/string_utils.cpp
+    src/utils/file_utils.cpp
+    src/utils/csv_sniffer.cpp
 )
 
 # Aggregate all library sources (everything except main.cpp)
