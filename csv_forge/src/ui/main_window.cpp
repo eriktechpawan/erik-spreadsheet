@@ -1303,9 +1303,9 @@ void MainWindow::onTabExportRequested(int index)
     // Delegate to export dialog with the tab's table
     ExportDialog dlg(tab->schema(), this);
     if (dlg.exec() == QDialog::Accepted) {
-        auto opts = dlg.getOptions();
+        auto opts = dlg.exportOptions();
         opts.tableName = tab->descriptor().tableName;
-        m_exportService->exportTable(opts);
+        m_exportService->exportData(opts);
     }
 }
 

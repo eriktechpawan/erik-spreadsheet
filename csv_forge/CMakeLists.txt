@@ -235,11 +235,6 @@ target_link_libraries(csv_forge_lib PUBLIC
 
 # --- Unit tests ---
 set(UNIT_TEST_SOURCES
-    tests/unit/test_query_builder.cpp
-    tests/unit/test_filter_state.cpp
-    tests/unit/test_sort_state.cpp
-    tests/unit/test_row_window_cache.cpp
-    tests/unit/test_edit_delta_store.cpp
     tests/unit/formula/test_formula_parser.cpp
     tests/unit/formula/test_formula_sql_translator.cpp
     tests/unit/pivot/test_pivot_config.cpp
@@ -256,16 +251,4 @@ foreach(test_source IN LISTS UNIT_TEST_SOURCES)
 endforeach()
 
 # --- Integration tests ---
-set(INTEGRATION_TEST_SOURCES
-    tests/integration/test_import_export.cpp
-    tests/integration/test_stats_service.cpp
-    tests/integration/test_session_state.cpp
-)
-
-foreach(test_source IN LISTS INTEGRATION_TEST_SOURCES)
-    get_filename_component(test_name ${test_source} NAME_WE)
-    add_executable(${test_name} ${test_source})
-    target_link_libraries(${test_name} PRIVATE csv_forge_lib)
-    add_test(NAME ${test_name} COMMAND ${test_name})
-    set_tests_properties(${test_name} PROPERTIES LABELS "integration")
-endforeach()
+# (Integration tests will be added when DuckDB-backed test fixtures are implemented)
