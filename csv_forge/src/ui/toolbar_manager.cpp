@@ -143,6 +143,8 @@ void ToolbarManager::setFileLoaded(bool loaded)
         QStringLiteral("profilePanel"),
         QStringLiteral("refresh"),
         QStringLiteral("editMode"),
+        QStringLiteral("calculatedColumn"),
+        QStringLiteral("queryLineage"),
     };
     for (const auto& name : dataActions) {
         if (auto* a = action(name))

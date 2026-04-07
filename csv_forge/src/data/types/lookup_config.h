@@ -3,6 +3,7 @@
 #include <QJsonObject>
 #include <QString>
 #include <QStringList>
+#include <vector>
 
 namespace csvforge {
 

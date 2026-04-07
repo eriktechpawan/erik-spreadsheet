@@ -24,6 +24,8 @@ QJsonObject LookupConfig::toJson() const
     obj[QStringLiteral("trimWhitespace")] = trimWhitespace;
     obj[QStringLiteral("caseInsensitive")] = caseInsensitive;
     obj[QStringLiteral("createNewTab")] = createNewTab;
+    obj[QStringLiteral("type")] = static_cast<int>(type);
+    obj[QStringLiteral("outputTarget")] = static_cast<int>(outputTarget);
 
     QJsonArray detArr;
     for (const auto& rc : returnColumnsDetailed) {
@@ -49,6 +51,10 @@ LookupConfig LookupConfig::fromJson(const QJsonObject& obj)
     cfg.trimWhitespace = obj[QStringLiteral("trimWhitespace")].toBool();
     cfg.caseInsensitive = obj[QStringLiteral("caseInsensitive")].toBool();
     cfg.createNewTab = obj[QStringLiteral("createNewTab")].toBool(true);
+    cfg.type = static_cast<LookupType>(
+        obj[QStringLiteral("type")].toInt(static_cast<int>(LookupType::ExactMatch)));
+    cfg.outputTarget = static_cast<LookupOutputTarget>(
+        obj[QStringLiteral("outputTarget")].toInt(static_cast<int>(LookupOutputTarget::AppendColumns)));
 
     for (const auto& v : obj[QStringLiteral("returnColumns")].toArray())
         cfg.returnColumns << v.toString();

@@ -28,6 +28,7 @@ struct ColumnSchema {
 
     static ColumnType fromDuckDBType(const QString& dbType);
     static QString typeToString(ColumnType t);
+    static ColumnType typeFromString(const QString& str);
 };
 
 using ColumnSchemaList = std::vector<ColumnSchema>;

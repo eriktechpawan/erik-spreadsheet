@@ -54,7 +54,9 @@ void ResultTabWidget::syncFromManager()
 
     // Remove excess tabs
     while (count() > m_manager->tabCount()) {
+        QWidget* page = widget(count() - 1);
         removeTab(count() - 1);
+        delete page;
     }
     // Add missing tabs
     while (count() < m_manager->tabCount()) {
@@ -113,7 +115,7 @@ void ResultTabWidget::onTabDirtyChanged(int index, bool /*dirty*/)
 
 void ResultTabWidget::contextMenuEvent(QContextMenuEvent* event)
 {
-    const int index = tabBar()->tabAt(event->pos());
+    const int index = tabBar()->tabAt(tabBar()->mapFrom(this, event->pos()));
     if (index < 0) return;
 
     QMenu menu(this);

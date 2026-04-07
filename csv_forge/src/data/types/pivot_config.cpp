@@ -1,4 +1,5 @@
 #include "data/types/pivot_config.h"
+#include "utils/string_utils.h"
 #include <QJsonArray>
 
 namespace csvforge {
@@ -37,6 +38,7 @@ PivotAggregation pivotAggregationFromString(const QString& str)
 
 QString PivotValueField::toSQL() const
 {
+    const QString quotedCol = quoteName(columnName);
     QString aggStr;
     switch (aggregation) {
     case PivotAggregation::Sum:           aggStr = QStringLiteral("SUM"); break;
@@ -48,9 +50,9 @@ QString PivotValueField::toSQL() const
     }
 
     if (aggregation == PivotAggregation::CountDistinct) {
-        return QStringLiteral("%1 \"%2\")").arg(aggStr, columnName);
+        return QStringLiteral("%1 %2)").arg(aggStr, quotedCol);
     }
-    return QStringLiteral("%1(\"%2\")").arg(aggStr, columnName);
+    return QStringLiteral("%1(%2)").arg(aggStr, quotedCol);
 }
 
 QString PivotValueField::displayName() const
@@ -87,6 +89,7 @@ QJsonObject PivotConfig::toJson() const
     obj[QStringLiteral("valueFields")] = valArr;
 
     obj[QStringLiteral("outputPath")] = outputPath;
+    obj[QStringLiteral("outputTarget")] = static_cast<int>(outputTarget);
     obj[QStringLiteral("includeGrandTotals")] = includeGrandTotals;
     obj[QStringLiteral("includeSubtotals")] = includeSubtotals;
     obj[QStringLiteral("sortByValue")] = sortByValue;
@@ -116,6 +119,8 @@ PivotConfig PivotConfig::fromJson(const QJsonObject& obj)
     }
 
     cfg.outputPath = obj[QStringLiteral("outputPath")].toString();
+    cfg.outputTarget = static_cast<PivotOutputTarget>(
+        obj[QStringLiteral("outputTarget")].toInt(static_cast<int>(PivotOutputTarget::NewTab)));
     cfg.includeGrandTotals = obj[QStringLiteral("includeGrandTotals")].toBool();
     cfg.includeSubtotals = obj[QStringLiteral("includeSubtotals")].toBool();
     cfg.sortByValue = obj[QStringLiteral("sortByValue")].toBool();

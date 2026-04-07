@@ -163,7 +163,7 @@ std::unique_ptr<TabState> TabState::fromJson(const QJsonObject& obj, QObject* pa
         ColumnSchema col;
         col.index = c[QStringLiteral("index")].toInt();
         col.name = c[QStringLiteral("name")].toString();
-        col.type = ColumnSchema::fromDuckDBType(c[QStringLiteral("type")].toString());
+        col.type = ColumnSchema::typeFromString(c[QStringLiteral("type")].toString());
         col.duckdbType = c[QStringLiteral("duckdbType")].toString();
         col.visible = c[QStringLiteral("visible")].toBool(true);
         col.displayOrder = c[QStringLiteral("displayOrder")].toInt(-1);

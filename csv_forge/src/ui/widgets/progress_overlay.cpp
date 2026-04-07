@@ -34,7 +34,7 @@ void ProgressOverlay::setupUI()
     frameLayout->setContentsMargins(20, 16, 20, 16);
     frameLayout->setSpacing(12);
 
-    m_messageLabel = new QLabel(this);
+    m_messageLabel = new QLabel(centerFrame);
     QFont msgFont = m_messageLabel->font();
     msgFont.setBold(true);
     m_messageLabel->setFont(msgFont);
@@ -42,13 +42,13 @@ void ProgressOverlay::setupUI()
     m_messageLabel->setWordWrap(true);
     frameLayout->addWidget(m_messageLabel);
 
-    m_progressBar = new QProgressBar(this);
+    m_progressBar = new QProgressBar(centerFrame);
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(0);
     m_progressBar->setTextVisible(true);
     frameLayout->addWidget(m_progressBar);
 
-    m_cancelBtn = new QPushButton(tr("Cancel"), this);
+    m_cancelBtn = new QPushButton(tr("Cancel"), centerFrame);
     m_cancelBtn->setFixedWidth(80);
     auto* btnLayout = new QHBoxLayout();
     btnLayout->addStretch();

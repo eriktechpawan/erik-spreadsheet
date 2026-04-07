@@ -4,6 +4,8 @@
 #include <QHeaderView>
 #include <QVBoxLayout>
 
+#include "data/types/column_schema.h"
+
 namespace csvforge {
 
 ColumnProfilePanel::ColumnProfilePanel(QWidget* parent)
@@ -108,19 +110,19 @@ void ColumnProfilePanel::setupUI()
 void ColumnProfilePanel::showStats(const ColumnStats& stats)
 {
     m_columnNameLabel->setText(stats.columnName);
-    m_typeLabel->setText(stats.typeName);
-    m_totalRowsLabel->setText(QString::number(stats.totalCount));
-    m_filteredRowsLabel->setText(QString::number(stats.filteredCount));
+    m_typeLabel->setText(ColumnSchema::typeToString(stats.type));
+    m_totalRowsLabel->setText(QString::number(stats.totalRows));
+    m_filteredRowsLabel->setText(QString::number(stats.filteredRows));
     m_nullCountLabel->setText(QString::number(stats.nullCount));
     m_uniqueCountLabel->setText(QString::number(stats.uniqueCount));
-    m_minLabel->setText(stats.min.toString());
-    m_maxLabel->setText(stats.max.toString());
-    m_sumLabel->setText(stats.sum.toString());
-    m_avgLabel->setText(stats.avg.isValid()
-                            ? QString::number(stats.avg.toDouble(), 'f', 2)
+    m_minLabel->setText(stats.minValue.toString());
+    m_maxLabel->setText(stats.maxValue.toString());
+    m_sumLabel->setText(QString::number(stats.sum, 'f', 2));
+    m_avgLabel->setText(stats.average != 0.0
+                            ? QString::number(stats.average, 'f', 2)
                             : QStringLiteral("-"));
-    m_medianLabel->setText(stats.median.isValid()
-                               ? stats.median.toString()
+    m_medianLabel->setText(stats.median != 0.0
+                               ? QString::number(stats.median, 'f', 2)
                                : QStringLiteral("-"));
 
     // Top values
@@ -129,7 +131,7 @@ void ColumnProfilePanel::showStats(const ColumnStats& stats)
         m_topValuesTable->insertRow(i);
         const auto& entry = stats.topValues[i];
         m_topValuesTable->setItem(i, 0,
-            new QTableWidgetItem(entry.first.toString()));
+            new QTableWidgetItem(entry.first));
         m_topValuesTable->setItem(i, 1,
             new QTableWidgetItem(QString::number(entry.second)));
     }

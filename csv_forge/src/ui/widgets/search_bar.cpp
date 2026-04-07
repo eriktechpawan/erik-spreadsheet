@@ -2,6 +2,7 @@
 #include "utils/constants.h"
 
 #include <QHBoxLayout>
+#include <QOverload>
 
 namespace csvforge {
 
@@ -91,7 +92,7 @@ void SearchBar::setupUI()
         }
     });
 
-    connect(m_columnSelector, &QComboBox::currentIndexChanged, this, [this]() {
+    connect(m_columnSelector, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
         if (!m_searchEdit->text().isEmpty()) {
             m_debounceTimer->start();
         }

@@ -84,7 +84,7 @@ void RecentFilesDialog::buildUI()
     m_table->setColumnCount(4);
     m_table->setHorizontalHeaderLabels(
         {QStringLiteral("File Name"), QStringLiteral("File Path"),
-         QStringLiteral("Size"), QStringLiteral("Last Opened")});
+         QStringLiteral("Size"), QStringLiteral("Last Modified")});
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);

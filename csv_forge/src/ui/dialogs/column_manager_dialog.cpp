@@ -47,7 +47,7 @@ ColumnSchemaList ColumnManagerDialog::getSchema() const
         col.visible = (visItem->checkState() == Qt::Checked);
 
         col.name = m_table->item(r, ColName)->text();
-        col.type = ColumnSchema::fromDuckDBType(m_table->item(r, ColType)->text());
+        col.type = ColumnSchema::typeFromString(m_table->item(r, ColType)->text());
 
         auto* widthSpin = qobject_cast<QSpinBox*>(
             m_table->cellWidget(r, ColWidth));

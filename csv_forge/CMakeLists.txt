@@ -123,6 +123,8 @@ set(DATA_MODEL_SOURCES
 
 # src/data/types/
 set(DATA_TYPES_SOURCES
+    src/data/types/column_schema.cpp
+    src/data/types/filter_rule.cpp
     src/data/types/pivot_config.cpp
     src/data/types/lookup_config.cpp
     src/data/types/formula_config.cpp

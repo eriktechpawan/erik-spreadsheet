@@ -46,11 +46,7 @@ void ActiveFilterChipBar::updateChips()
     const auto& filter = m_filterState->currentFilter();
     for (int i = 0; i < filter.rules.size(); ++i) {
         const auto& rule = filter.rules[i];
-        QString display = QStringLiteral("%1 %2 %3")
-                              .arg(rule.columnName,
-                                   QString::number(static_cast<int>(rule.op)),
-                                   rule.value.toString());
-        addChip(display, i);
+        addChip(rule.toDisplayString(), i);
     }
 
     m_clearAllBtn->setVisible(true);
@@ -85,10 +81,10 @@ void ActiveFilterChipBar::addChip(const QString& text, int index)
         emit filterRemoved(index);
     });
 
-    // Insert before the stretch (which is the last item)
+    // Insert after the clear button (before the stretch)
     int insertPos = m_layout->count() - 1; // before stretch
     if (m_clearAllBtn->isVisible()) {
-        insertPos = m_layout->indexOf(m_clearAllBtn);
+        insertPos = m_layout->indexOf(m_clearAllBtn) + 1;
     }
     m_layout->insertWidget(insertPos, chip);
     m_chips.append(chip);

@@ -68,7 +68,7 @@ ColumnStats StatsService::computeStats(const QString& tableName,
     if (qr.success && !qr.rows.empty()) {
         const auto& row = qr.rows[0];
         int i = 0;
-        stats.totalRows    = row[i++].toLongLong();
+        const qint64 queryRowCount = row[i++].toLongLong();
         stats.nonNullCount = row[i++].toLongLong();
         stats.nullCount    = row[i++].toLongLong();
         stats.uniqueCount  = row[i++].toLongLong();
@@ -79,7 +79,16 @@ ColumnStats StatsService::computeStats(const QString& tableName,
             stats.average = row[i++].toDouble();
             stats.median  = row[i++].toDouble();
         }
-        stats.filteredRows = stats.totalRows;
+
+        // When a filter is active, the aggregate query returns filtered counts.
+        // Compute the unfiltered total separately so both values are correct.
+        if (whereClause.isEmpty()) {
+            stats.totalRows = queryRowCount;
+            stats.filteredRows = queryRowCount;
+        } else {
+            stats.totalRows = m_engine->getRowCount(tableName);
+            stats.filteredRows = queryRowCount;
+        }
     }
 
     // Top 20 most frequent values

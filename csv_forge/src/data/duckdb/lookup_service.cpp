@@ -72,9 +72,17 @@ QString LookupService::buildLookupQuery(const LookupConfig& config)
 
     const QString srcAlias = QStringLiteral("__source__");
 
-    // Columns to return from target
+    // Columns to return from target — prefer returnColumnsDetailed with aliases
     QStringList returnColExpressions;
-    if (config.returnColumns.isEmpty()) {
+    if (!config.returnColumnsDetailed.empty()) {
+        for (const auto& rc : config.returnColumnsDetailed) {
+            QString expr = QStringLiteral("%1.%2").arg(targetAlias, quoteName(rc.sourceColumn));
+            if (!rc.outputAlias.isEmpty() && rc.outputAlias != rc.sourceColumn) {
+                expr += QStringLiteral(" AS %1").arg(quoteName(rc.outputAlias));
+            }
+            returnColExpressions << expr;
+        }
+    } else if (config.returnColumns.isEmpty()) {
         returnColExpressions << QStringLiteral("%1.*").arg(targetAlias);
     } else {
         for (const QString& col : config.returnColumns) {
@@ -82,19 +90,25 @@ QString LookupService::buildLookupQuery(const LookupConfig& config)
         }
     }
 
-    // Build SELECT list: all source columns + requested target columns
-    const QString selectList = QStringLiteral("%1.*, %2")
-                                   .arg(srcAlias, returnColExpressions.join(QStringLiteral(", ")));
+    // Build SELECT list: all source columns + requested target columns.
+    // Include the target key column with a unique alias for unmatched-row detection.
+    static const QString kTargetKeyAlias = QStringLiteral("__lookup_target_key__");
+    const QString selectList = QStringLiteral("%1.*, %2.%3 AS %4, %5")
+                                   .arg(srcAlias,
+                                        targetAlias, quoteName(config.targetKeyColumn),
+                                        quoteName(kTargetKeyAlias),
+                                        returnColExpressions.join(QStringLiteral(", ")));
 
     // JOIN condition
     const QString joinCond = QStringLiteral("%1.%2 = %3.%4")
                                  .arg(srcAlias, quoteName(config.sourceKeyColumn),
                                       targetAlias, quoteName(config.targetKeyColumn));
 
-    // JOIN type
+    // JOIN type — ExactMatch uses INNER JOIN (drops unmatched rows),
+    // LeftJoin uses LEFT JOIN (keeps all source rows).
     const QString joinType = (config.type == LookupType::LeftJoin)
                                  ? QStringLiteral("LEFT JOIN")
-                                 : QStringLiteral("LEFT JOIN");  // ExactMatch also LEFT JOIN; unmatched rows stay
+                                 : QStringLiteral("INNER JOIN");
 
     const QString sql = QStringLiteral("SELECT %1 FROM %2 AS %3 %4 %5 ON %6")
                             .arg(selectList,
@@ -145,17 +159,12 @@ LookupService::LookupResult LookupService::executeLookup(const LookupConfig& con
     // Compute match statistics
     const qint64 totalRows = m_engine->getRowCount(result.resultTableName);
 
-    // Resolve target reference to get target key column for null check
-    const QString targetRef = ensureTargetLoaded(config);
-    const bool targetIsExpr = targetRef.startsWith(QStringLiteral("read_csv_auto("));
-    Q_UNUSED(targetIsExpr);
-
-    // Count unmatched rows: rows where target key column is NULL
+    // Count unmatched rows using the disambiguated target key alias.
     // After a LEFT JOIN the target key will be NULL for unmatched rows.
     const QString unmatchedSQL = QStringLiteral(
         "SELECT COUNT(*) FROM %1 WHERE %2 IS NULL")
         .arg(quoteName(result.resultTableName),
-             quoteName(config.targetKeyColumn));
+             quoteName(QStringLiteral("__lookup_target_key__")));
 
     const qint64 unmatched = m_engine->connection().executeCount(unmatchedSQL);
     result.unmatchedRows = (unmatched >= 0) ? unmatched : 0;

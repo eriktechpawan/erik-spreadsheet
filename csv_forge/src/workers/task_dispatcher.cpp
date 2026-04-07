@@ -1,5 +1,6 @@
 #include "workers/task_dispatcher.h"
 
+#include <QThread>
 #include <algorithm>
 
 #include "utils/logging.h"
@@ -111,6 +112,9 @@ void TaskDispatcher::removeTask(BackgroundTask* task)
             m_activeTasks.end());
         allDone = m_activeTasks.empty();
     }
+
+    // Schedule deletion of the completed task to avoid leaks.
+    task->deleteLater();
 
     if (allDone) {
         emit allTasksCompleted();
