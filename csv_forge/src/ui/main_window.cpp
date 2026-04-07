@@ -372,12 +372,16 @@ void MainWindow::openFile(const QString& filePath)
 void MainWindow::onImportFile()
 {
     ImportDialog dlg({}, this);
-    if (dlg.exec() == QDialog::Accepted) {
-        const QString path = dlg.importOptions().encoding; // file path from dialog
-        // Re-open to get the path the user chose inside the import dialog
-        // The ImportDialog stores the file path internally and builds the options
-        loadFileIntoEngine(m_currentFilePath, dlg.importOptions());
-    }
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+
+    // The ImportDialog's file path line edit stores the user-chosen path.
+    // Retrieve it from the dialog's filePath property.
+    const QString filePath = dlg.property("filePath").toString();
+    if (filePath.isEmpty())
+        return;
+
+    loadFileIntoEngine(filePath, dlg.importOptions());
 }
 
 void MainWindow::loadFileIntoEngine(const QString& filePath,
@@ -594,15 +598,15 @@ void MainWindow::onRedo()
 
 void MainWindow::onCopy()
 {
-    // Delegate to table view's built-in copy via QApplication clipboard
-    if (m_tableView)
-        QMetaObject::invokeMethod(m_tableView, "copy", Qt::DirectConnection);
+    // DataTableView inherits QAbstractItemView which doesn't have a built-in
+    // copy. Clipboard handling will be implemented in a future iteration.
+    Q_UNUSED(m_tableView);
 }
 
 void MainWindow::onPaste()
 {
-    if (m_tableView)
-        QMetaObject::invokeMethod(m_tableView, "paste", Qt::DirectConnection);
+    // Paste support will be implemented in a future iteration.
+    Q_UNUSED(m_tableView);
 }
 
 void MainWindow::onDeleteSelection()
