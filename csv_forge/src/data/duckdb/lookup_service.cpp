@@ -8,6 +8,10 @@
 
 namespace csvforge {
 
+namespace {
+const QString kTargetKeyAlias = QStringLiteral("__lookup_target_key__");
+} // namespace
+
 LookupService::LookupService(DuckDBEngine* engine, QObject* parent)
     : QObject(parent)
     , m_engine(engine)
@@ -92,7 +96,6 @@ QString LookupService::buildLookupQuery(const LookupConfig& config)
 
     // Build SELECT list: all source columns + requested target columns.
     // Include the target key column with a unique alias for unmatched-row detection.
-    static const QString kTargetKeyAlias = QStringLiteral("__lookup_target_key__");
     const QString selectList = QStringLiteral("%1.*, %2.%3 AS %4, %5")
                                    .arg(srcAlias,
                                         targetAlias, quoteName(config.targetKeyColumn),
@@ -164,7 +167,7 @@ LookupService::LookupResult LookupService::executeLookup(const LookupConfig& con
     const QString unmatchedSQL = QStringLiteral(
         "SELECT COUNT(*) FROM %1 WHERE %2 IS NULL")
         .arg(quoteName(result.resultTableName),
-             quoteName(QStringLiteral("__lookup_target_key__")));
+             quoteName(kTargetKeyAlias));
 
     const qint64 unmatched = m_engine->connection().executeCount(unmatchedSQL);
     result.unmatchedRows = (unmatched >= 0) ? unmatched : 0;
