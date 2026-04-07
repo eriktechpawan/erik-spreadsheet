@@ -36,7 +36,7 @@ A high-performance desktop CSV editor for macOS, built with **Qt6** and powered 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<owner>/erik-spreadsheet.git
+git clone https://github.com/eriktechpawan/erik-spreadsheet.git
 cd erik-spreadsheet/csv_forge
 
 # 2. Create an out-of-source build directory

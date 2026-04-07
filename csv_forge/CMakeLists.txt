@@ -36,7 +36,6 @@ set(DUCKDB_URL
 FetchContent_Declare(
     duckdb_lib
     URL      ${DUCKDB_URL}
-    URL_HASH SHA256=0a3f8a420561c21220deab7e2b9128e02c0e34f8e3e9880f44baa39b9ed0fd37
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(duckdb_lib)
