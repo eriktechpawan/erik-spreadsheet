@@ -39,7 +39,10 @@ public:
     // Build the final SQL string
     QString build() const;
 
-    // Static helpers for filter → SQL translation
+    // Static helpers for filter → SQL translation.
+    // Note: AboveAverage / BelowAverage operators emit a subquery containing
+    // the placeholder __SOURCE_TABLE__. Callers must replace it with the
+    // actual quoted table name before executing the resulting SQL.
     static QString filterGroupToSQL(const FilterGroup& group);
     static QString filterRuleToSQL(const FilterRule& rule);
     static QString filterOperatorToSQL(FilterOperator op, const QString& columnRef,

@@ -83,17 +83,6 @@ ColumnStats StatsService::computeStats(const QString& tableName,
     }
 
     // Top 20 most frequent values
-    const QString topSql = QStringLiteral(
-        "SELECT CAST(%1 AS VARCHAR) AS val, COUNT(*) AS cnt "
-        "FROM %2%3 "
-        "WHERE %1 IS NOT NULL "
-        "GROUP BY val ORDER BY cnt DESC LIMIT 20")
-        .arg(col, tbl,
-             whereClause.isEmpty()
-                 ? QString()
-                 : QStringLiteral(" ") /* WHERE already embedded via filter */);
-
-    // Rebuild with proper WHERE combination for top values
     QString topWhere = QStringLiteral("%1 IS NOT NULL").arg(col);
     if (!whereClause.isEmpty()) {
         topWhere = QStringLiteral("(%1) AND %2").arg(whereClause, topWhere);
