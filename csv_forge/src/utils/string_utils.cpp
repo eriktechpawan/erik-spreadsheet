@@ -67,7 +67,10 @@ QChar parseDelimiter(const QString& token)
         return QLatin1Char(';');
     }
 
-    // Single character
+    // Single character (re-check after trimming)
+    if (lower.isEmpty()) {
+        return QLatin1Char(',');
+    }
     return token.at(0);
 }
 
