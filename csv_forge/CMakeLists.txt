@@ -56,70 +56,71 @@ set(MAIN_SOURCE
     src/main.cpp
 )
 
-# src/app/
-set(APP_SOURCES
-    src/app/Application.cpp
-    src/app/AppConfig.cpp
-)
-
 # src/ui/
 set(UI_SOURCES
-    src/ui/MainWindow.cpp
-    src/ui/CsvTableView.cpp
-    src/ui/StatusBarManager.cpp
-    src/ui/ToolBarManager.cpp
+    src/ui/main_window.cpp
+    src/ui/menu_manager.cpp
+    src/ui/toolbar_manager.cpp
+    src/ui/status_bar_manager.cpp
 )
 
 # src/ui/dialogs/
 set(UI_DIALOG_SOURCES
-    src/ui/dialogs/ImportDialog.cpp
-    src/ui/dialogs/ExportDialog.cpp
-    src/ui/dialogs/QueryDialog.cpp
-    src/ui/dialogs/PreferencesDialog.cpp
-    src/ui/dialogs/AboutDialog.cpp
+    src/ui/dialogs/import_dialog.cpp
+    src/ui/dialogs/export_dialog.cpp
+    src/ui/dialogs/filter_builder_dialog.cpp
+    src/ui/dialogs/column_stats_dialog.cpp
+    src/ui/dialogs/pivot_table_dialog.cpp
+    src/ui/dialogs/lookup_wizard_dialog.cpp
+    src/ui/dialogs/column_manager_dialog.cpp
+    src/ui/dialogs/preferences_dialog.cpp
+    src/ui/dialogs/recent_files_dialog.cpp
 )
 
 # src/ui/widgets/
 set(UI_WIDGET_SOURCES
-    src/ui/widgets/CellEditor.cpp
-    src/ui/widgets/FilterWidget.cpp
-    src/ui/widgets/SearchWidget.cpp
-    src/ui/widgets/ColumnHeaderWidget.cpp
+    src/ui/widgets/data_table_view.cpp
+    src/ui/widgets/filter_panel.cpp
+    src/ui/widgets/search_bar.cpp
+    src/ui/widgets/active_filter_chip_bar.cpp
+    src/ui/widgets/column_profile_panel.cpp
+    src/ui/widgets/progress_overlay.cpp
 )
 
 # src/data/duckdb/
 set(DATA_DUCKDB_SOURCES
-    src/data/duckdb/DuckDBManager.cpp
-    src/data/duckdb/QueryExecutor.cpp
-    src/data/duckdb/DataImporter.cpp
-    src/data/duckdb/DataExporter.cpp
+    src/data/duckdb/duckdb_connection.cpp
+    src/data/duckdb/duckdb_engine.cpp
+    src/data/duckdb/query_builder.cpp
+    src/data/duckdb/csv_import_service.cpp
+    src/data/duckdb/stats_service.cpp
+    src/data/duckdb/export_service.cpp
+    src/data/duckdb/pivot_service.cpp
+    src/data/duckdb/lookup_service.cpp
 )
 
 # src/data/model/
 set(DATA_MODEL_SOURCES
-    src/data/model/CsvTableModel.cpp
-    src/data/model/ColumnDefinition.cpp
-    src/data/model/QueryResultModel.cpp
-)
-
-# src/data/types/
-set(DATA_TYPES_SOURCES
-    src/data/types/ColumnType.cpp
-    src/data/types/TypeConverter.cpp
+    src/data/model/table_model.cpp
+    src/data/model/row_window_cache.cpp
+    src/data/model/filter_state.cpp
+    src/data/model/sort_state.cpp
+    src/data/model/edit_delta_store.cpp
+    src/data/model/session_state.cpp
 )
 
 # src/workers/
 set(WORKER_SOURCES
-    src/workers/ImportWorker.cpp
-    src/workers/ExportWorker.cpp
-    src/workers/QueryWorker.cpp
+    src/workers/background_task.cpp
+    src/workers/task_dispatcher.cpp
+    src/workers/query_worker.cpp
+    src/workers/import_worker.cpp
+    src/workers/stats_worker.cpp
+    src/workers/export_worker.cpp
 )
 
 # src/utils/
 set(UTILS_SOURCES
-    src/utils/FileUtils.cpp
-    src/utils/StringUtils.cpp
-    src/utils/CsvParser.cpp
     src/utils/logging.cpp
     src/utils/perf_timer.cpp
     src/utils/string_utils.cpp
@@ -129,13 +130,11 @@ set(UTILS_SOURCES
 
 # Aggregate all library sources (everything except main.cpp)
 set(LIB_SOURCES
-    ${APP_SOURCES}
     ${UI_SOURCES}
     ${UI_DIALOG_SOURCES}
     ${UI_WIDGET_SOURCES}
     ${DATA_DUCKDB_SOURCES}
     ${DATA_MODEL_SOURCES}
-    ${DATA_TYPES_SOURCES}
     ${WORKER_SOURCES}
     ${UTILS_SOURCES}
 )
@@ -207,11 +206,11 @@ target_link_libraries(csv_forge_lib PUBLIC
 
 # --- Unit tests ---
 set(UNIT_TEST_SOURCES
-    tests/unit/test_CsvTableModel.cpp
-    tests/unit/test_DuckDBManager.cpp
-    tests/unit/test_QueryExecutor.cpp
-    tests/unit/test_CsvParser.cpp
-    tests/unit/test_FileUtils.cpp
+    tests/unit/test_query_builder.cpp
+    tests/unit/test_filter_state.cpp
+    tests/unit/test_sort_state.cpp
+    tests/unit/test_row_window_cache.cpp
+    tests/unit/test_edit_delta_store.cpp
 )
 
 foreach(test_source IN LISTS UNIT_TEST_SOURCES)
@@ -224,9 +223,9 @@ endforeach()
 
 # --- Integration tests ---
 set(INTEGRATION_TEST_SOURCES
-    tests/integration/test_ImportExport.cpp
-    tests/integration/test_QueryExecution.cpp
-    tests/integration/test_EndToEnd.cpp
+    tests/integration/test_import_export.cpp
+    tests/integration/test_stats_service.cpp
+    tests/integration/test_session_state.cpp
 )
 
 foreach(test_source IN LISTS INTEGRATION_TEST_SOURCES)
