@@ -65,6 +65,7 @@
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QInputDialog>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QSettings>
@@ -220,6 +221,10 @@ void MainWindow::setupConnections()
             this, &MainWindow::onShowPivotTable);
     connect(m_toolbarManager, &ToolbarManager::showLookupWizard,
             this, &MainWindow::onShowLookupWizard);
+    connect(m_toolbarManager, &ToolbarManager::showCalculatedColumn,
+            this, &MainWindow::onShowCalculatedColumn);
+    connect(m_toolbarManager, &ToolbarManager::showQueryLineage,
+            this, &MainWindow::onShowQueryLineage);
     connect(m_toolbarManager, &ToolbarManager::showPreferences,
             this, &MainWindow::onShowPreferences);
 
@@ -286,6 +291,10 @@ void MainWindow::setupConnections()
             this, &MainWindow::onShowPivotTable);
     connect(m_menuManager, &MenuManager::showLookupWizard,
             this, &MainWindow::onShowLookupWizard);
+    connect(m_menuManager, &MenuManager::showCalculatedColumn,
+            this, &MainWindow::onShowCalculatedColumn);
+    connect(m_menuManager, &MenuManager::showQueryLineage,
+            this, &MainWindow::onShowQueryLineage);
     connect(m_menuManager, &MenuManager::refreshData,
             this, &MainWindow::onRefreshData);
     connect(m_menuManager, &MenuManager::showPreferences,

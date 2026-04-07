@@ -79,6 +79,14 @@ void ToolbarManager::setupToolbar()
     connect(pivot,  &QAction::triggered, this, &ToolbarManager::showPivotTable);
     connect(lookup, &QAction::triggered, this, &ToolbarManager::showLookupWizard);
 
+    auto* calcCol = createAction(QStringLiteral("calculatedColumn"), tr("Calc Column"),
+                                  tr("Add a calculated column"));
+    auto* lineage = createAction(QStringLiteral("queryLineage"), tr("Lineage"),
+                                  tr("View query lineage"));
+
+    connect(calcCol, &QAction::triggered, this, &ToolbarManager::showCalculatedColumn);
+    connect(lineage, &QAction::triggered, this, &ToolbarManager::showQueryLineage);
+
     m_toolbar->addSeparator();
 
     // --- Settings ---

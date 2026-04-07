@@ -32,6 +32,8 @@ signals:
     void showColumnStats();
     void showPivotTable();
     void showLookupWizard();
+    void showCalculatedColumn();
+    void showQueryLineage();
     void showPreferences();
     void refreshData();
 

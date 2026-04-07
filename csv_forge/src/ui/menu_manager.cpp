@@ -265,6 +265,16 @@ void MenuManager::createDataMenu()
     dataMenu->addAction(lookupAct);
     connect(lookupAct, &QAction::triggered, this, &MenuManager::showLookupWizard);
 
+    auto* calcColAct = createAction(QStringLiteral("calculatedColumn"),
+                                     tr("&Calculated Column..."));
+    dataMenu->addAction(calcColAct);
+    connect(calcColAct, &QAction::triggered, this, &MenuManager::showCalculatedColumn);
+
+    auto* lineageAct = createAction(QStringLiteral("queryLineage"),
+                                     tr("View Query &Lineage..."));
+    dataMenu->addAction(lineageAct);
+    connect(lineageAct, &QAction::triggered, this, &MenuManager::showQueryLineage);
+
     dataMenu->addSeparator();
 
     auto* refreshAct = createAction(QStringLiteral("refresh"), tr("&Refresh"),
